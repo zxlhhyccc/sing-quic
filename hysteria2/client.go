@@ -20,6 +20,7 @@ import (
 	"github.com/metacubex/sing-quic/hysteria2/internal/protocol"
 	"github.com/metacubex/sing-quic/hysteria2/realm"
 	"github.com/metacubex/sing/common"
+	"github.com/metacubex/sing/common/baderror"
 	E "github.com/metacubex/sing/common/exceptions"
 	"github.com/metacubex/sing/common/logger"
 	M "github.com/metacubex/sing/common/metadata"
@@ -696,11 +697,11 @@ func (c *clientConn) NeedHandshake() bool {
 func (c *clientConn) Read(p []byte) (n int, err error) {
 	if c.responseRead {
 		n, err = c.Stream.Read(p)
-		return n, qtls.WrapError(err)
+		return n, baderror.WrapQUIC(err)
 	}
 	status, errorMessage, err := protocol.ReadTCPResponse(c.Stream)
 	if err != nil {
-		return 0, qtls.WrapError(err)
+		return 0, baderror.WrapQUIC(err)
 	}
 	if !status {
 		err = E.New("remote error: ", errorMessage)
@@ -708,7 +709,7 @@ func (c *clientConn) Read(p []byte) (n int, err error) {
 	}
 	c.responseRead = true
 	n, err = c.Stream.Read(p)
-	return n, qtls.WrapError(err)
+	return n, baderror.WrapQUIC(err)
 }
 
 func (c *clientConn) Write(p []byte) (n int, err error) {
@@ -723,7 +724,7 @@ func (c *clientConn) Write(p []byte) (n int, err error) {
 		return len(p), nil
 	}
 	n, err = c.Stream.Write(p)
-	return n, qtls.WrapError(err)
+	return n, baderror.WrapQUIC(err)
 }
 
 func (c *clientConn) LocalAddr() net.Addr {
